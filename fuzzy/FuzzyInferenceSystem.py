@@ -3,7 +3,7 @@ import numpy as np
 
 
 class FIS:
-
+    rules = []
     _output_function = []
     _output = []
     _fuzzy_sets = []
@@ -73,6 +73,8 @@ class FIS:
             status.append(self._fuzzy_sets[index].get_identifier_from_value(fuzzy_values[index]))
         return self.get_fis_rule_number(status)
 
+    def get_label(self, fuzzy_set, value):
+        return self._fuzzy_sets[fuzzy_set].get_identifier_from_value(value)
     #
     # This method sets the truth values of the rules on the list _alpha and also it sets the global_alpha
     #

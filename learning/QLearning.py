@@ -43,7 +43,7 @@ class QL:
         # self.states.append(new_state)
         self.actions.append(action)
 
-        # print(" new_q_value " + str(new_q_value))
-        if not np.isnan(new_q_value) and np.isinf(new_q_value):
-            self.q_table[state, action] = new_q_value
-        return new_state
+        #print(" new_q_value " + str(new_q_value))
+        #if not np.isnan(new_q_value) and np.isinf(new_q_value):
+        self.q_table[state, action] = new_q_value
+        return new_state, action, reward

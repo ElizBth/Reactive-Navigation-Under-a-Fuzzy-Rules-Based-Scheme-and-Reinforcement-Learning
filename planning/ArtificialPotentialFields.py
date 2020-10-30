@@ -32,16 +32,17 @@ class ArtificialPotentialFields:
     #
     def is_done(self):
         if self.destination[0] == self.robot[0] and self.destination[1] == self.robot[1]:
-            return True
+            return 1
         else:
-            return False
+            return 0
 
     #
     # This method verifies if robot is on a obstacle position
     # return True/False
     #
     def is_failed(self):
-        return list(self.robot) in list(self.obstacles)
+        boo = list(self.robot) in list(self.obstacles)
+        return 1 if boo else 0
 
     #
     # This method appends a new obstacle position

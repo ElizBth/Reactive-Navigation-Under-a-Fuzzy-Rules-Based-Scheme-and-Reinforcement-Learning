@@ -36,6 +36,15 @@ class RobotPathPlanning(ArtificialPotentialFields):
         self.path_to_destination = self.generate_path(destination)
         self.path_to_charging_station = self.generate_path(charging_station)
         self.path_to_follow = self.path_to_destination
+        self.end = 0
+
+    def reset(self):
+        self.robot = [0, 0]
+        self.last_destination = 0
+        self.path_to_destination = self.generate_path(self.destination)
+        self.path_to_charging_station = self.generate_path(self.charging_station)
+        self.path_to_follow = self.path_to_destination
+        self.end = 0
 
     #
     # This method returns a list with the path generated to reach destination
@@ -53,7 +62,8 @@ class RobotPathPlanning(ArtificialPotentialFields):
         count = 0
         tmp_robot_position = self.robot
         tmp_tmp_robot_position = self.robot
-        while count < 50:
+        #resultant_force = -1000000
+        while count < 100:
             resultant_force = -1000000
             for index in range(len(self._window)):
 
@@ -64,7 +74,9 @@ class RobotPathPlanning(ArtificialPotentialFields):
                 else:
                     tmp_resultant_force = resultant_forces[int(tmp_position[0])][int(tmp_position[1])]
 
-                if tmp_resultant_force > resultant_force:
+                #print("Pos x: " + str(int(tmp_position[0])) + " Pos y " + str(int(tmp_position[1])) + " Force " + str(
+                #    tmp_resultant_force))
+                if tmp_resultant_force >= resultant_force:
                     tmp_tmp_robot_position = tmp_position
                     resultant_force = tmp_resultant_force
 
@@ -84,7 +96,7 @@ class RobotPathPlanning(ArtificialPotentialFields):
     #
     def go_to_next_position(self, destination):
         self.update_step_parameters(destination)
-        self.update_position()
+        return self.update_position()
 
     #
     # This method verifies if destinations has changed and if it is true generate a new path to the new destination
@@ -95,15 +107,16 @@ class RobotPathPlanning(ArtificialPotentialFields):
             if destination:
                 self.path_to_follow = self.generate_path(self.charging_station)
             else:
-                self.path_to_follow = self.generate_path(self.destination)
+                self.path_to_follow = self.generate_path(self.goal)
             self.last_destination = destination
 
     #
     # This method gets next position and update robot's position
     #
     def update_position(self):
-        self.robot = self.path_to_follow.pop(0)
+        if len(self.path_to_follow) > 0:
+            self.robot = self.path_to_follow.pop(0)
+        else:
+            self.end = 1
         print(self.robot)
-
-
-
+        return self.robot

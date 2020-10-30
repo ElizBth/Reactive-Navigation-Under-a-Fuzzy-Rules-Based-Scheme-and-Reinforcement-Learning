@@ -9,24 +9,25 @@ import random
 from datetime import datetime
 
 
-class FQL:
+class FQL(FuzzyInferenceSystem.FIS):
     accumulated_reward = 0
     _gamma = 0.8
     _lambda = 0.7
 
     def __init__(self, learning_rate, discount_factor, actions, output_functions, fuzzy_sets, fuzzy_sets_identifiers):
+        super().__init__(fuzzy_sets, fuzzy_sets_identifiers)
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.actions = actions
-        self.fis = FuzzyInferenceSystem.FIS(fuzzy_sets=fuzzy_sets, fuzzy_sets_identifiers=fuzzy_sets_identifiers)
-        self.fis.set_output_functions(output_functions)
-        self.eligibility = np.zeros((len(self.fis.get_fis_rules()), actions), dtype=float)
-        self.q_table = np.zeros((len(self.fis.get_fis_rules()), actions), dtype=float)
+        #self.fis = FuzzyInferenceSystem.FIS(fuzzy_sets=fuzzy_sets, fuzzy_sets_identifiers=fuzzy_sets_identifiers)
+        self.set_output_functions(output_functions)
+        self.eligibility = np.zeros((len(self.get_fis_rules()), actions), dtype=float)
+        self.q_table = np.zeros((len(self.get_fis_rules()), actions), dtype=float)
         self.accumulated_reward = 0
 
     def __update_eligibility(self, rule, action):
         action_selected = np.max(self.q_table[rule])
-        alpha = self.fis.get_alpha_of_rule(rule) / self.fis.get_global_alpha()
+        alpha = self.get_alpha_of_rule(rule) / self.get_global_alpha()
 
         if action_selected == action:
             eligibility = self._lambda * self._gamma * self.eligibility[rule][action] + alpha
@@ -46,13 +47,13 @@ class FQL:
 
     def __get_q_value(self, action):
         q_val = 0
-        for index in range(len(self.fis.get_alpha_values())):
-            q_val += self.fis.get_alpha_values()[index] * self.fis.get_output_function(action) * \
-                     self.q_table[index][action] / self.fis.get_global_alpha()
+        for index in range(len(self.get_alpha_values())):
+            q_val += self.get_alpha_values()[index] * self.get_output_function(action) * \
+                     self.q_table[index][action] / self.get_global_alpha()
         return q_val
 
     def __get_value_of_states(self):
-        return np.sum(self.fis.get_alpha_values() * np.amax(self.q_table, 1)) / self.fis.get_global_alpha()
+        return np.sum(self.get_alpha_values() * np.amax(self.q_table, 1)) / self.get_global_alpha()
 
     def get_reward(self, rule, action):
         print("Reward in rule " + str(rule) + " when action is " + str(action))
@@ -69,11 +70,13 @@ class FQL:
     def __get_action(self, rule, trial):
         random.seed(datetime.now())
         exploration_probability = 10/(10+trial)
+        print("arg max", random.randint(0, self.actions-1))
         return random.randint(0, self.actions-1) if exploration_probability > 0.5 else np.argmax(self.q_table[rule])
 
     def task_execution(self, action):
         print("Action to be executed " + str(action))
         return action
+
 
 
 

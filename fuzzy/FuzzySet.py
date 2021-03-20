@@ -137,6 +137,12 @@ class FuzzySet:
         return self._fuzzySpaceValues
 
     #
+    # This method gets the values of the fuzzy set
+    #
+    def get_fuzzy_set_value(self, index):
+        return self._fuzzySpaceValues[index]
+
+    #
     # This method gets the identifiers of the fuzzy set
     #
     def get_fuzzy_set_identifiers(self):
@@ -146,10 +152,14 @@ class FuzzySet:
     # This method returns the set identifier with the inserted value
     #
     def get_identifier_from_value(self, value):
-        return self._fuzzySpaceIdentifiers[value]
+        return self._fuzzySpaceIdentifiers[int(value)]
 
     #
     # This method returns the total fuzzy functions used to generate the fuzzy set
     #
     def get_number_of_functions(self):
         return len(self._fuzzyFunctions)
+
+    def get_fuzzy_functions(self):
+        return self._fuzzyFunctions
+

@@ -14,7 +14,7 @@ class robotBatteryReducedFQLSimulation(FQL):
 
     def __init__(self, actions, output_functions, fuzzy_sets, fuzzy_sets_identifiers, _target, _charging_station,
                  _obstacles, max_success):
-        super().__init__(0.01, 0.99, actions, output_functions, fuzzy_sets, fuzzy_sets_identifiers)
+        super().__init__(0.01, 0.9, actions, output_functions, fuzzy_sets, fuzzy_sets_identifiers)
         repulsive_factor = 61.5
         att_factor = 2.3
         obstacle_radius = 0.5
@@ -74,7 +74,7 @@ class robotBatteryReducedFQLSimulation(FQL):
         self.log.append("nom,epoch,trial,battery,station,target,reward,state,action,x,y,done,fail,other")
         for epoch in range(0, epochs):
             trial = 0
-            self.battery = 99
+            self.battery = 40
             self.pathPlanning.reset()
             while trial < max_trials and self.battery > 0:
                 trial += 1
@@ -197,7 +197,7 @@ if __name__ == "__main__":
     ]
 
     _max_success = 1
-    SAVE_TIME = 0
+    SAVE_TIME = 1
     SAVE_LOG = 1
 
     robotBatteryFQLSimulation = robotBatteryReducedFQLSimulation(total_actions, output_function_list, fuzzy_set_list,
@@ -213,10 +213,10 @@ if __name__ == "__main__":
     #print(l+vl+2)
 
     delay = np.zeros(15)
-    for obs_index in range(15):
+    for obs_index in range(1):
         obstacles = obstacles_total[obs_index]  # np.random.randint(10, size=(20, 2)).T
         rows = []
-        for index in range(1):
+        for index in range(15):
             # obstacles = np.random.randint(10, size=(20, 2)).T
 
             # print(obstacles)
@@ -230,13 +230,13 @@ if __name__ == "__main__":
 
         # print(robotBatteryFQLSimulation.log)
         if SAVE_LOG:
-            np.savetxt("log_rf2/log_fql_reduced_rf2_" + str(obs_index) + ".csv",
+            np.savetxt("log_rf2/log_peer_vtime_" + str(obs_index) + ".csv",
                        robotBatteryFQLSimulation.log,
                        delimiter=", ",
                        fmt='% s')
 
     if SAVE_TIME:
-        np.savetxt("log_rf2/log_fql_reduced_delay_rf2.txt",
+        np.savetxt("log_rf2/log_v_time.txt",
                    delay,
                    delimiter=", ",
                    fmt='% s')

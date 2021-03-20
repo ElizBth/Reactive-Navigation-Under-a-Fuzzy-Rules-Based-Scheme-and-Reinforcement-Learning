@@ -9,6 +9,7 @@ class FIS:
     _fuzzy_sets = []
     _alpha = []
     _global_alpha = 0
+    omega = []
 
     def __init__(self, fuzzy_sets, fuzzy_sets_identifiers):
         self._fuzzy_sets = fuzzy_sets
@@ -31,6 +32,8 @@ class FIS:
     # This method returns the rule number
     #
     def get_fis_rule_number(self, current_states):
+        if len(current_states) == 1:
+            return self.rules.index(current_states)
         return self.rules.index(tuple(current_states))
 
     #
@@ -54,6 +57,12 @@ class FIS:
     #
     # This method appends an output on outputs list
     #
+    def set_outputs(self, outputs):
+        self._output = outputs
+
+    #
+    # This method appends an output on outputs list
+    #
     def set_output(self, value):
         self._output.append(value)
 
@@ -71,10 +80,13 @@ class FIS:
         status = []
         for index in range(len(self._fuzzy_sets)):
             status.append(self._fuzzy_sets[index].get_identifier_from_value(fuzzy_values[index]))
+            if len(fuzzy_values) == 1:
+                break
         return self.get_fis_rule_number(status)
 
     def get_label(self, fuzzy_set, value):
         return self._fuzzy_sets[fuzzy_set].get_identifier_from_value(value)
+
     #
     # This method sets the truth values of the rules on the list _alpha and also it sets the global_alpha
     #
@@ -106,6 +118,18 @@ class FIS:
     #
     def get_alpha_values(self):
         return self._alpha
+
+    def get_rule_output(self, fuzzy_values):
+        total_omega = 0
+        output_omegas = 0
+
+        for rule in range(len(self.rules)):
+            rule_value = 1
+            for set_index in range(len(self._fuzzy_sets)):
+                rule_value = min(rule_value, (self._fuzzy_sets[set_index]).get_fuzzy_set_value(fuzzy_values[set_index]))
+            total_omega += rule_value
+            output_omegas += (rule_value*self._output_function[0] + rule_value*self._output_function[1] + rule_value*self._output_function[2] )
+            return output_omegas/total_omega
 
 
 

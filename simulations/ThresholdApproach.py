@@ -1,0 +1,186 @@
+import sys
+sys.path.insert(0, '/home/lizzy/PycharmProjects/RobotPathPlanningBasedOnBatteryBehaviour')
+
+from fuzzy import FuzzySet as fuzzySet
+from fuzzy.FuzzyInferenceSystem import FIS
+from planning.RobotPathPlanning import RobotPathPlanning
+import numpy as np
+from ttictoc import tic, toc
+
+from memory_profiler import profile
+
+class ThNavigationApproach:
+    battery = 100
+    position = []
+    distance_to_destination = 100
+    distance_to_charging_station = 100
+    actions_selected = []
+    version = 1
+    trial = 0
+    destiny = 0
+
+    def __init__(self, _destiny, _station, _obstacles):
+        self.actions = 3
+
+        # Path planning module initialization
+        self.pathPlanning = RobotPathPlanning(_destiny, _station, _obstacles, 61.5, 2.3, 0.1, 10, 10)
+
+        # Path to destiny generation
+        self.init_dist_to_destination = self.pathPlanning.get_euclidean_distance(self.pathPlanning.robot,
+                                                                                 self.pathPlanning.goal)
+        # Path to battery charging station generation
+        self.init_dist_to_station = self.pathPlanning.get_euclidean_distance(self.pathPlanning.robot,
+                                                                             self.pathPlanning.charging_station)
+
+        self.robot_position = [0, 0]
+        self.log = []
+
+    def update_battery_level(self):
+        print("battery")
+        battery = (-1.8245 * self.trial) + 100
+
+        self.battery = battery if battery > 0 else 0
+        if self.battery > 100:
+            self.battery = 100
+
+    def update_distance_to_destination(self):
+        self.distance_to_destination = 100 * self.pathPlanning.get_euclidean_distance(self.pathPlanning.robot,
+                                                                                     self.pathPlanning.goal) / self.init_dist_to_destination
+        self.distance_to_destination = max(0, min(100, self.distance_to_destination))
+
+    def update_distance_to_charging_station(self):
+        self.distance_to_charging_station = 100 * self.pathPlanning.get_euclidean_distance(self.pathPlanning.robot,
+                                                                                          self.pathPlanning.charging_station) / self.init_dist_to_station
+        self.distance_to_charging_station = max(0, min(100, self.distance_to_charging_station))
+
+    def task_execution(self, action):
+        self.actions_selected.append(action)
+        if action == 0:
+            print("Go to destination battery " + str(self.battery))
+            self.position = self.pathPlanning.go_to_next_position(0)
+
+            self.destiny = 0
+        elif action == 2:
+            print("Wait battery " + str(self.battery))
+        else:
+            print("Go to station battery " + str(self.battery))
+
+            self.destiny = 1
+            self.position = self.pathPlanning.go_to_next_position(1)
+            if self.pathPlanning.is_done():
+                self.battery = 100
+                self.trial = 0
+
+
+    @profile
+    def start(self):
+        #self.log = []
+
+        self.log.append("nom,trial,battery,target,station,action,x,y,destiny,done,fail,other")
+        self.pathPlanning.reset()
+        self.trial = 0
+        while self.trial < 1000:
+            self.trial += 1
+
+            self.update_battery_level()
+            self.update_distance_to_destination()
+            self.update_distance_to_charging_station()
+
+            if self.battery > 40:
+                output = 0
+            elif self.battery > 10:
+                output = 1
+            else:
+                output = 2
+
+            self.task_execution(output)
+
+            done = 1 if output == 0 and self.pathPlanning.is_done() else 0
+
+            #self.log.append(
+            #    [0, self.trial, self.battery, self.distance_to_charging_station, self.distance_to_destination,
+            #     output, self.position[0], self.position[1], self.destiny, done, self.pathPlanning.is_failed(), 0])
+
+            if done or self.position[0] == 5 and self.position[1] == 9:
+                print("Success!")
+                break
+
+            if output == 2 or self.battery == 0:
+                print("Aborted")
+                break
+
+            if self.pathPlanning.is_failed():
+                print("Game over!!")
+                break
+
+        return self.trial
+
+
+if __name__ == "__main__":
+    # version rf2
+    charging_station = [5, 9]
+    target = [9, 5]
+
+    obstacles = [
+        [[0, 1], [0, 3], [5, 0], [5, 2], [8, 2], [1, 3], [4, 3], [7, 4], [8, 4], [0, 5], [5, 5], [3, 6], [8, 6],
+         [2, 8], [6, 7], [0, 8], [4, 8], [6, 9], [7, 9], [8, 9]],
+        [[1, 1], [2, 1], [3, 1], [2, 2], [2, 3], [6, 0], [6, 1], [6, 2], [7, 2], [8, 2], [8, 5], [2, 4],
+         [2, 6], [3, 6], [4, 6], [5, 6], [8, 6], [8, 7], [8, 8], [6, 8]],
+        [[1, 1], [2, 1], [3, 1], [2, 2], [2, 3], [1, 2], [3, 3], [6, 1], [7, 1], [8, 1], [7, 2], [7, 3], [8, 3],
+         [6, 3], [1, 5], [2, 5], [3, 5], [2, 6], [2, 7], [3, 7]],
+        [[0, 4], [0, 5], [0, 6], [1, 6], [2, 6], [1, 2], [2, 2], [3, 2], [2, 3], [2, 4], [4, 0], [5, 0],
+         [6, 0], [6, 1], [6, 2], [6, 6], [6, 7], [7, 4], [7, 5], [8, 4]],
+        [[1, 2], [2, 1], [3, 1], [2, 4], [2, 5], [2, 7], [0, 6], [3, 7], [4, 2], [5, 2], [5, 6], [5, 7],
+         [5, 8], [6, 4], [6, 6], [7, 4], [7, 6], [8, 4], [8, 3], [8, 2]],
+        [[1, 1], [1, 2], [2, 1], [3, 2], [3, 3], [4, 3], [5, 3], [1, 4], [0, 1], [8, 6], [4, 7], [3, 8],
+         [2, 8], [1, 8], [6, 6], [7, 6], [4, 6], [7, 5], [8, 4], [8, 3]],
+        [[1, 2], [1, 3], [2, 4], [3, 5], [3, 6], [5, 1], [6, 0], [7, 0], [8, 0], [8, 1], [7, 3], [6, 3],
+         [5, 3], [6, 4], [6, 5], [8, 5], [5, 8], [7, 7], [7, 8], [6, 8]],
+        [[3, 0], [3, 1], [2, 1], [7, 0], [7, 1], [8, 1], [3, 3], [3, 4], [4, 5], [4, 6], [2, 4], [2, 5],
+         [3, 6], [4, 6], [1, 8], [2, 8], [2, 9], [7, 9], [7, 8], [8, 8]],
+        [[3, 0], [3, 1], [2, 1], [7, 0], [7, 1], [8, 1], [3, 3], [3, 4], [4, 5], [4, 6], [2, 4], [2, 5],
+         [3, 6], [4, 6], [1, 8], [2, 8], [2, 9], [7, 9], [7, 8], [8, 8]],
+        [[1, 4], [2, 4], [3, 4], [4, 4], [4, 5], [5, 3], [5, 2], [6, 2], [6, 1], [5, 5], [1, 7], [5, 7],
+         [5, 8], [6, 8], [4, 7], [3, 7], [6, 5], [7, 5], [2, 5], [7, 2]],
+        [[1, 1], [1, 2], [1, 3], [3, 1], [4, 1], [5, 1], [7, 1], [7, 2], [7, 0], [5, 4], [6, 4], [7, 4],
+         [1, 6], [2, 6], [3, 6], [2, 8], [6, 6], [6, 7], [6, 8], [8, 6]],
+        [[1, 1], [1, 3], [0, 5], [0, 6], [1, 9], [2, 6], [3, 3], [3, 9], [4, 0], [4, 7], [5, 5], [6, 3],
+         [7, 1], [7, 6], [6, 8], [6, 9], [8, 9], [9, 7], [9, 2], [8, 4]],
+        [[1, 1], [1, 2], [1, 7], [1, 8], [2, 1], [3, 1], [4, 5], [4, 6], [5, 6], [5, 5], [5, 8], [6, 8],
+         [7, 8], [7, 7], [8, 4], [9, 4], [2, 6], [2, 7], [1, 7], [0, 7]],
+        [[0, 4], [1, 1], [1, 5], [1, 8], [2, 7], [2, 2], [3, 3], [4, 0], [5, 1], [6, 3], [7, 2], [8, 1],
+         [7, 5], [7, 7], [7, 8], [3, 9], [6, 4], [7, 4], [6, 3], [7, 3]],
+        [[0, 3], [0, 6], [1, 3], [1, 7], [2, 0], [2, 1], [4, 2], [4, 3], [3, 8], [3, 9], [3, 5], [3, 6],
+         [4, 6], [4, 5], [6, 7], [7, 6], [8, 6], [7, 3], [8, 3], [9, 3]]
+    ]
+    thresholdNavigationApproach = ThNavigationApproach(target, charging_station, obstacles[0])
+
+    SAVE_LOG = 0
+    SAVE_TIME = 0
+
+    delay = np.zeros(15)
+    for obs_index in range(1):
+        obstacles_ = obstacles[obs_index]  # np.random.randint(10, size=(20, 2)).T
+        rows = []
+        # obstacles = np.random.randint(10, size=(20, 2)).T
+
+        # print(obstacles)
+        tic()
+        trial = thresholdNavigationApproach.start()
+        thresholdNavigationApproach.pathPlanning.obstacles = obstacles_
+        delay[obs_index] = toc()
+        #data_string = str(trial) + "," + str(np.sum(robotBatteryFQLSimulation.reward))
+        #rows.append(data_string)
+        if SAVE_LOG:
+            np.savetxt("log_peer_th/log_th_test_1_scene_" + str(obs_index) + ".csv",
+                       thresholdNavigationApproach.log,
+                       delimiter=", ",
+                       fmt='% s')
+
+    if SAVE_TIME:
+        np.savetxt("log_peer_th/log_th_test_1_scene_delay.txt",
+                   delay,
+                   delimiter=", ",
+                   fmt='% s')
+
+

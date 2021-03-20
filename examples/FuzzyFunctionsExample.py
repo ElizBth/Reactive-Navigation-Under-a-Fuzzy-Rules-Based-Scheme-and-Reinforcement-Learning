@@ -29,7 +29,7 @@ ax2.plot(x, trapezoidal.get_fuzzy_function())
 ax2.set_title("Trapezoidal function")
 
 # Sigmoid function example
-sigmoid = fuzzyFunctions.SigmoidFunction(a=4, alpha=2, step=0.1)
+sigmoid = fuzzyFunctions.SigmoidFunction(a=4, alpha=-2, step=0.1)
 
 ax3.plot(x, sigmoid.get_fuzzy_function())
 ax3.set_title("Sigmoid function")

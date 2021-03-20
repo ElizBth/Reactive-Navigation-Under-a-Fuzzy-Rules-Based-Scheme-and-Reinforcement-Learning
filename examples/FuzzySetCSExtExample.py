@@ -8,18 +8,18 @@ import numpy as np
 #
 # Define the list of fuzzy functions names
 #
-functions = [fuzzySet.FuzzyFunctionsIdentifiers.Trapezoidal, fuzzySet.FuzzyFunctionsIdentifiers.Triangular,
-                         fuzzySet.FuzzyFunctionsIdentifiers.Triangular, fuzzySet.FuzzyFunctionsIdentifiers.Trapezoidal]
+functions = [fuzzySet.FuzzyFunctionsIdentifiers.Sigmoid, fuzzySet.FuzzyFunctionsIdentifiers.Gaussian,
+                         fuzzySet.FuzzyFunctionsIdentifiers.Sigmoid]
 
 #
 # Define the list of string identifiers for each set
 #
-identifiers = ["very_low", "low", "medium", "high"]
+identifiers = ["very_low", "low", "medium"]
 
 #
 # Define a list with the parameters for each fuzzy function
 #
-parameters = [[0, 40, 0, 20, 1], [20, 60, 40, 1], [40, 80, 60, 1], [60, 100, 80, 100, 1]]
+parameters = [[30, -0.5, 0.1], [50, 20, 0.1], [70, 0.5, 0.1]]
 
 #
 # The fuzzy set is defined with the FuzzySet class using the list of functions, identifiers and parameters
